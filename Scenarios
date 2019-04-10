@@ -1,0 +1,9 @@
+Peer to Peer 1 way communication only (send, listen, send, listen, ...), no encryption
+
+Peer to Peer 2 way communication, no encryption
+
+Peer to Server then to peer, no encryption (just hello)
+
+Peer to Server for presaved digit
+    peer to peer to confirm digit
+    troubleshoot: change digit to reject. 
