@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/types.h>
@@ -48,12 +49,17 @@ void *receive_runnable(void *vargp)
     return NULL; 
 } 
 
+int dh(int p,int g,int s){
+	return (int)(pow(g,s)) % p;
+}
+
 int main(int argc, char **argv)
 {
-        int server_socket, peer_socket, fd, sent_bytes, remain_data;
+        int server_socket, peer_socket, fd, sent_bytes, remain_data, dhKey;
         socklen_t socket_length;
         off_t offset;
         ssize_t len;
+	time_t t; 
         struct sockaddr_in server_addr, peer_addr;
         struct stat file_stat;
         char file_size[BUFSIZ];
@@ -114,28 +120,30 @@ int main(int argc, char **argv)
 
 	printf("Client is connecting\n");
         fprintf(stdout, "Accept peer --> %s\n", inet_ntoa(peer_addr.sin_addr));
+	
+	//Diffie Hellman Authentication with random number
+	int p = 19;
+	int g = 13;
+	int s = 2; 
 
-		/*
-        sprintf(file_size, "%ld", file_stat.st_size);
-        //Sending file size 
-        len = send(peer_socket, file_size, sizeof(file_size), 0);
-        if (len < 0)
-        {
-              fprintf(stderr, "Error sending opening --> %s", strerror(errno));
+	int difhel = dh(p,g,s);
 
-              exit(EXIT_FAILURE);
-        }
-
-        offset = 0;
-        remain_data = file_stat.st_size;
-	//Sending file data
-	printf("Sending File\n");
-        while (((sent_bytes = sendfile(peer_socket, fd, &offset, 1)) > 0) && (remain_data > 0))
-        {
-
-                remain_data -= sent_bytes;
+	if(recv(peer_socket, file_size, BUFSIZ, 0)<0){
+		fprintf(stderr, "error receiving --> %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
 	}
-	printf("File sent\n");*/
+
+	printf("%s\n", file_size);
+	dhKey = atoi(file_size);
+	sprintf(file_size, "%d", difhel);
+
+	if(send(peer_socket, file_size, BUFSIZ, 0)<0){
+		fprintf(stderr, "error sending --> %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	
+	int secret = dh(p, dhKey, s);
+
 	printf("Connected to client\n");
 	char input[MSG_BUFFER_SIZE];
 	char received[MSG_BUFFER_SIZE];
@@ -146,6 +154,7 @@ int main(int argc, char **argv)
 	args->socket = peer_socket;
 	args->running = true;
 	args->cut_off = false;
+
 	//Create thread for receiving messages, continues while loop if message is received
 	pthread_t thread_id;
 	pthread_create(&thread_id,NULL,receive_runnable,args);
@@ -163,7 +172,8 @@ int main(int argc, char **argv)
 		}
 		else 
 		{
-			printf(">>>%s \n", input); 
+			printf(">>>%s \n", input);
+		        	
 			send(peer_socket, input, MSG_BUFFER_SIZE, 0);
 		}
 	}
@@ -190,3 +200,4 @@ int main(int argc, char **argv)
 
         return 0;
 }
+

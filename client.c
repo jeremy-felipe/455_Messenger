@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <math.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -12,6 +13,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <time.h>
 
 #define SERVER_ADDRESS  "127.0.0.1"
 #define FILENAME        "outputfile.html"
@@ -46,10 +48,34 @@ void *receive_runnable(void *vargp)
 } 
 
 
+int dh(int p,int g,int s){
+	return (int)(pow(g,s)) % p;
+}
+
+char* encryption (char mess[], int key){
+	int i;
+	printf("WHY ARE YOU DOING THIS?!");
+	for(i=0; mess[i]!='\0'; i++){
+		mess[i] = (mess[i]+key)%26;
+	}
+	return mess;
+}
+
+char* decryption (char mess[], int key){
+	int i;
+
+	for(i = 0; mess[i] != '\0'; i++){
+		mess[i] = (mess[i]-key)%26;
+	}
+	return mess;
+
+}
+	
 int main(int argc, char **argv)
 {
-        int client_socket, file_size, remain_data;
+        int client_socket, file_size, remain_data, dhKey;
         ssize_t len;
+	time_t t; 
         struct sockaddr_in remote_addr;
         char buffer[BUFSIZ];
         FILE *received_file;
@@ -87,29 +113,29 @@ int main(int argc, char **argv)
         }
 
 	printf("Connected to server\n");
-        /*//Receiving file size
-        recv(client_socket, buffer, BUFSIZ, 0);
-        file_size = atoi(buffer);
+	
+	//Diffie Hellman Authentication with random number
+	int p = 19;
+	int g = 13;
+	int s = 5;
+	
+	int difhel = dh(p,g,s);
+	sprintf(buffer, "%d", difhel);
+	if(send(client_socket, buffer, BUFSIZ, 0)<0){
+		fprintf(stderr, "Error sending --> %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	if(recv(client_socket, buffer, BUFSIZ, 0)<0){
+		fprintf(stderr, "error recieving --> %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	printf ("%s\n",buffer);
+	dhKey = atoi(buffer);
+	int secret = dh(p, dhKey, s);
 
-        received_file = fopen(FILENAME, "w");
-        if (received_file == NULL)
-        {
-                fprintf(stderr, "Failed to open outputfile --> %s\n", strerror(errno));
-
-                exit(EXIT_FAILURE);
-        }
-
-	printf("Receiving message from server\n");
-        remain_data = file_size;
-        while (remain_data > 0)
-        {
-		len = recv(client_socket, buffer, 1, 0);
-                fwrite(buffer, sizeof(char), len, received_file);
-                remain_data -= len;
-        }
-	printf("File received\n");*/
 	char input[MSG_BUFFER_SIZE];
 	char received[MSG_BUFFER_SIZE];
+
 	memset(input, 0, strlen(input));
 	memset(received, 0, strlen(input));
 	rec_struct *args = malloc(sizeof *args);
@@ -134,6 +160,7 @@ int main(int argc, char **argv)
 		}
 		else 
 		{
+			encryption(input, dhKey);
 			printf(">>>%s \n", input); 
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
 			
