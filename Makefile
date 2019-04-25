@@ -1,6 +1,6 @@
 default : 
-	gcc -pthread -o simple_server server.c 
-	gcc -pthread -o simple_client client.c 
+	gcc -pthread -o simple_server server.c -lm
+	gcc -pthread -o simple_client client.c -lm
 
 clean: remove default
 
