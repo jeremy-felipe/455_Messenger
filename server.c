@@ -16,6 +16,7 @@
 #include <sys/sendfile.h>
 
 
+
 #define SERVER_ADDRESS  "127.0.0.1"
 #define FILE_TO_SEND    "input.html"
 #define MSG_BUFFER_SIZE 2048
@@ -28,22 +29,54 @@ typedef struct
 	int socket;
 	int running;
 	int cut_off;
+	int secret;
 } rec_struct;
+
+char* encryption (char mess[], int key){
+	int i;
+	for(i=0; mess[i]!='\0'; i++){
+		mess[i] = (mess[i]+key)%256;
+	}
+	return mess;
+}
+
+char* decryption (char mess[], int key){
+	int i;
+
+	for(i = 0; mess[i] != '\0'; i++){
+
+		if (mess[i] < key)
+		{
+			mess[i] = 256-(key-mess[i]);	
+		}
+		else
+		{
+			mess[i] = mess[i]-key;
+		}
+	}
+	return mess;
+}
+
 
 void *receive_runnable(void *vargp) 
 { 
-	
 	rec_struct *real_rec_struct = vargp;
 	while(true)
 	{
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
+		
+		decryption(real_rec_struct->rec,real_rec_struct->secret);
 		if(strstr(real_rec_struct->rec,"/exit"))
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
 			break;
 		}
-		printf("<<<%s", real_rec_struct->rec);
+		
+		printf("\n<<<%s\n", real_rec_struct->rec);
+		
+		
+		
 		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
 	}
     return NULL; 
@@ -141,7 +174,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "error sending --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	
+
 	int secret = dh(p, dhKey, s);
 
 	printf("Connected to client\n");
@@ -154,6 +187,7 @@ int main(int argc, char **argv)
 	args->socket = peer_socket;
 	args->running = true;
 	args->cut_off = false;
+	args->secret = secret;
 
 	//Create thread for receiving messages, continues while loop if message is received
 	pthread_t thread_id;

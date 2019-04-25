@@ -26,6 +26,7 @@ typedef struct
 	int socket;
 	int running;
 	int cut_off;
+	int secret;
 } rec_struct;
 
 void *receive_runnable(void *vargp) 
@@ -41,7 +42,7 @@ void *receive_runnable(void *vargp)
 			real_rec_struct->cut_off = true;
 			break;
 		}
-		printf("<<<%s", real_rec_struct->rec);
+		printf("\n<<<%s\n", real_rec_struct->rec);
 		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
 	}
     return NULL; 
@@ -54,9 +55,8 @@ int dh(int p,int g,int s){
 
 char* encryption (char mess[], int key){
 	int i;
-	printf("WHY ARE YOU DOING THIS?!");
 	for(i=0; mess[i]!='\0'; i++){
-		mess[i] = (mess[i]+key)%26;
+		mess[i] = (mess[i]+key)%128;
 	}
 	return mess;
 }
@@ -65,10 +65,16 @@ char* decryption (char mess[], int key){
 	int i;
 
 	for(i = 0; mess[i] != '\0'; i++){
-		mess[i] = (mess[i]-key)%26;
+		if (mess[i] < key)
+		{
+			mess[i] = 128-(key-mess[i]);
+		}
+		else
+		{
+			mess[i] = mess[i]-key;
+		}
 	}
 	return mess;
-
 }
 	
 int main(int argc, char **argv)
@@ -125,10 +131,12 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error sending --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
 	if(recv(client_socket, buffer, BUFSIZ, 0)<0){
 		fprintf(stderr, "error recieving --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
 	printf ("%s\n",buffer);
 	dhKey = atoi(buffer);
 	int secret = dh(p, dhKey, s);
@@ -143,10 +151,12 @@ int main(int argc, char **argv)
 	args->socket = client_socket;
 	args->running = true;
 	args->cut_off = false;
+	args->secret = secret;
+
 	//Create thread for receiving messages, continues while loop if message is received
 	pthread_t thread_id;
 	pthread_create(&thread_id,NULL,receive_runnable,args);
-	
+
 	while(args->running)
 	{	
 		//Prompt for input
@@ -156,13 +166,16 @@ int main(int argc, char **argv)
 		if (strstr(input, "/exit") != NULL) 
 		{
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
+			
 			break;
 		}
 		else 
 		{
-			encryption(input, dhKey);
+			encryption(input, secret);
 			printf(">>>%s \n", input); 
+			
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
+			
 			
 		}
 	}
