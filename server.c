@@ -61,19 +61,18 @@ char* decryption (char mess[], int key){
 void *receive_runnable(void *vargp) 
 { 
 	rec_struct *real_rec_struct = vargp;
-	while(real_rec_struct->running == true)
+	while(real_rec_struct->running && !real_rec_struct->cut_off)
 	{
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
 		
+		
 		decryption(real_rec_struct->rec,real_rec_struct->secret);
-		if(strstr(real_rec_struct->rec,"/exit"))
+		if(strstr(real_rec_struct->rec,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
 			break;
 		}
-		
-		printf("%s\n\n", real_rec_struct->rec);
 		printf("\n<<<%s\n", real_rec_struct->rec);
 		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
 	}
@@ -199,23 +198,22 @@ int main(int argc, char **argv)
 		//Some way to exit
 		if (strstr(input, "/exit") != NULL) 
 		{
+			encryption(input, secret);
 			send(peer_socket, input, MSG_BUFFER_SIZE, 0);
+			break;
+		}
+		else if(args->cut_off)
+		{
+			printf("Other User Disconnected\n");
 			break;
 		}
 		else 
 		{
-			encryption(input,secret);
 			printf(">>>%s \n", input);
+			encryption(input,secret);
+			
 			send(peer_socket, input, MSG_BUFFER_SIZE, 0);
 		}
-	}
-	if(args->cut_off)
-	{
-		printf("Other User Disconnected\n");
-	}
-	else
-	{
-		printf("Waiting for client to disconnect\n");
 	}
 	pthread_cancel(thread_id);
 	//Free up the struct

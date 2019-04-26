@@ -29,6 +29,23 @@ typedef struct
 	int secret;
 } rec_struct;
 
+void scrubber (char* input) {
+	int i;
+	for (i = 0; i < sizeof(input); i++)
+	{
+		if (input[i] < 32 || input[i] > 126)
+		{
+			int j;
+			int k = i;
+			for (j = i+1; j < sizeof(input); j++)
+			{
+				input[k] = input[j];
+				k++;
+			}
+		}
+	}
+}
+
 char* encryption(char mess[], int key){
 	int i;
 	for(i=0; mess[i]!='\0'; i++){
@@ -62,7 +79,7 @@ void *receive_runnable(void *vargp)
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
 		
 		decryption(real_rec_struct->rec,real_rec_struct->secret);
-		if(strstr(real_rec_struct->rec,"/exit"))
+		if(strstr(real_rec_struct->rec,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
@@ -166,24 +183,24 @@ int main(int argc, char **argv)
 		//Exit or send
 		if (strstr(input, "/exit") != NULL) 
 		{
-			send(client_socket, "/exit", MSG_BUFFER_SIZE, 0);
+			encryption(input, secret);
+			send(client_socket, input, MSG_BUFFER_SIZE, 0);
+			break;
+		}
+		else if(args->cut_off)
+		{
+			printf("Other User Disconnected\n");
 			break;
 		}
 		else 
 		{
-			encryption(input, secret);
 			printf(">>>%s \n", input); 	
+			encryption(input, secret);
+			
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
 		}
 	}
-	if(args->cut_off)
-	{
-		printf("Other User Disconnected\n");
-	}
-	else
-	{
-		
-	}
+	
 	pthread_cancel(thread_id);
 	//Free up the struct
 	free(args);
