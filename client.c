@@ -29,6 +29,30 @@ typedef struct
 	int secret;
 } rec_struct;
 
+char* encryption(char mess[], int key){
+	int i;
+	for(i=0; mess[i]!='\0'; i++){
+		mess[i] = (mess[i]+key)%256;
+	}
+	return mess;
+}
+
+char* decryption(char mess[], int key){
+	int i;
+
+	for(i = 0; mess[i] != '\0'; i++){
+		if (mess[i] < key)
+		{
+			mess[i] = 256-(key-mess[i]);
+		}
+		else
+		{
+			mess[i] = mess[i]-key;
+		}
+	}
+	return mess;
+}
+
 void *receive_runnable(void *vargp) 
 { 
 	
@@ -36,6 +60,8 @@ void *receive_runnable(void *vargp)
 	while(true)
 	{
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
+		
+		decryption(real_rec_struct->rec,real_rec_struct->secret);
 		if(strstr(real_rec_struct->rec,"/exit"))
 		{
 			real_rec_struct->running = false;
@@ -48,33 +74,8 @@ void *receive_runnable(void *vargp)
     return NULL; 
 } 
 
-
 int dh(int p,int g,int s){
 	return (int)(pow(g,s)) % p;
-}
-
-char* encryption (char mess[], int key){
-	int i;
-	for(i=0; mess[i]!='\0'; i++){
-		mess[i] = (mess[i]+key)%128;
-	}
-	return mess;
-}
-
-char* decryption (char mess[], int key){
-	int i;
-
-	for(i = 0; mess[i] != '\0'; i++){
-		if (mess[i] < key)
-		{
-			mess[i] = 128-(key-mess[i]);
-		}
-		else
-		{
-			mess[i] = mess[i]-key;
-		}
-	}
-	return mess;
 }
 	
 int main(int argc, char **argv)
@@ -165,18 +166,14 @@ int main(int argc, char **argv)
 		//Exit or send
 		if (strstr(input, "/exit") != NULL) 
 		{
-			send(client_socket, input, MSG_BUFFER_SIZE, 0);
-			
+			send(client_socket, "/exit", MSG_BUFFER_SIZE, 0);
 			break;
 		}
 		else 
 		{
 			encryption(input, secret);
-			printf(">>>%s \n", input); 
-			
+			printf(">>>%s \n", input); 	
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
-			
-			
 		}
 	}
 	if(args->cut_off)

@@ -61,7 +61,7 @@ char* decryption (char mess[], int key){
 void *receive_runnable(void *vargp) 
 { 
 	rec_struct *real_rec_struct = vargp;
-	while(true)
+	while(real_rec_struct->running == true)
 	{
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
 		
@@ -73,10 +73,8 @@ void *receive_runnable(void *vargp)
 			break;
 		}
 		
+		printf("%s\n\n", real_rec_struct->rec);
 		printf("\n<<<%s\n", real_rec_struct->rec);
-		
-		
-		
 		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
 	}
     return NULL; 
@@ -206,8 +204,8 @@ int main(int argc, char **argv)
 		}
 		else 
 		{
+			encryption(input,secret);
 			printf(">>>%s \n", input);
-		        	
 			send(peer_socket, input, MSG_BUFFER_SIZE, 0);
 		}
 	}
