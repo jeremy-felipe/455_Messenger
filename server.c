@@ -67,6 +67,7 @@ void *receive_runnable(void *vargp)
 		
 		
 		decryption(real_rec_struct->rec,real_rec_struct->secret);
+printf("%d\n", real_rec_struct->rec[0]);
 		if(strstr(real_rec_struct->rec,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;

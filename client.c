@@ -194,7 +194,8 @@ int main(int argc, char **argv)
 		}
 		else 
 		{
-			printf(">>>%s \n", input); 	
+			printf(">>>%s \n", input);
+			scrubber(input);
 			encryption(input, secret);
 			
 			send(client_socket, input, MSG_BUFFER_SIZE, 0);
