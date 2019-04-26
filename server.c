@@ -18,7 +18,7 @@
 
 
 #define SERVER_ADDRESS  "127.0.0.1"
-#define FILE_TO_SEND    "input.html"
+#define FILE_TO_SEND	"input.html"
 #define MSG_BUFFER_SIZE 2048
 
 
@@ -76,7 +76,7 @@ void *receive_runnable(void *vargp)
 		printf("\n<<<%s\n", real_rec_struct->rec);
 		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
 	}
-    return NULL; 
+	return NULL; 
 } 
 
 int dh(int p,int g,int s){
@@ -85,14 +85,14 @@ int dh(int p,int g,int s){
 
 int main(int argc, char **argv)
 {
-        int server_socket, peer_socket, fd, sent_bytes, remain_data, dhKey;
-        socklen_t socket_length;
-        off_t offset;
-        ssize_t len;
+	int server_socket, peer_socket, fd, sent_bytes, remain_data, dhKey;
+	socklen_t socket_length;
+	off_t offset;
+	ssize_t len;
 	time_t t; 
-        struct sockaddr_in server_addr, peer_addr;
-        struct stat file_stat;
-        char file_size[BUFSIZ];
+	struct sockaddr_in server_addr, peer_addr;
+	struct stat file_stat;
+	char file_size[BUFSIZ];
 	char *conn_check;
 
 	if (argc < 2) {
@@ -101,55 +101,55 @@ int main(int argc, char **argv)
 	}
 	
 	conn_check = "0";
-        sent_bytes = 0;
+	sent_bytes = 0;
 
-        // Create server socket 
-        server_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (server_socket == -1)
-        {
-                fprintf(stderr, "Error creating socket --> %s", strerror(errno));
+	// Create server socket 
+	server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_socket == -1)
+	{
+		fprintf(stderr, "Error creating socket --> %s", strerror(errno));
 
-                exit(EXIT_FAILURE);
-        }
+		exit(EXIT_FAILURE);
+	}
 
-        //Zeroing server_addr 
-        memset(&server_addr, 0, sizeof(server_addr));
-        //Construct server_addr 
-        server_addr.sin_family = AF_INET;
-        inet_pton(AF_INET, SERVER_ADDRESS, &(server_addr.sin_addr));
-        server_addr.sin_port = htons(atoi(argv[1]));
+	//Zeroing server_addr 
+	memset(&server_addr, 0, sizeof(server_addr));
+	//Construct server_addr 
+	server_addr.sin_family = AF_INET;
+	inet_pton(AF_INET, SERVER_ADDRESS, &(server_addr.sin_addr));
+	server_addr.sin_port = htons(atoi(argv[1]));
 
-         //Bind socket
-        if ((bind(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr))) == -1)
-        {
-                fprintf(stderr, "Error binding --> %s", strerror(errno));
+	 //Bind socket
+	if ((bind(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr))) == -1)
+	{
+			fprintf(stderr, "Error binding --> %s", strerror(errno));
 
-                exit(EXIT_FAILURE);
-        }
+			exit(EXIT_FAILURE);
+	}
 
-        //Listening to incoming connections 
-        if ((listen(server_socket, 5)) == -1)
-        {
-                fprintf(stderr, "Error listening for clients --> %s", strerror(errno));
+	//Listening to incoming connections 
+	if ((listen(server_socket, 5)) == -1)
+	{
+		fprintf(stderr, "Error listening for clients --> %s", strerror(errno));
 
-                exit(EXIT_FAILURE);
-        }
+			exit(EXIT_FAILURE);
+	}
 	printf("Listening for clients\n");
 
 
 
-        socket_length = sizeof(struct sockaddr_in);
-        //Accepting incoming peers
-        peer_socket = accept(server_socket, (struct sockaddr *)&peer_addr, &socket_length);
-        if (peer_socket == -1)
-        {
-                fprintf(stderr, "Error accepting --> %s", strerror(errno));
+	socket_length = sizeof(struct sockaddr_in);
+	//Accepting incoming peers
+	peer_socket = accept(server_socket, (struct sockaddr *)&peer_addr, &socket_length);
+	if (peer_socket == -1)
+	{
+			fprintf(stderr, "Error accepting --> %s", strerror(errno));
 
-                exit(EXIT_FAILURE);
-        }
+			exit(EXIT_FAILURE);
+	}
 
 	printf("Client is connecting\n");
-        fprintf(stdout, "Accept peer --> %s\n", inet_ntoa(peer_addr.sin_addr));
+	fprintf(stdout, "Accept peer --> %s\n", inet_ntoa(peer_addr.sin_addr));
 	
 	//Diffie Hellman Authentication with random number
 	int p = 19;
@@ -225,9 +225,9 @@ int main(int argc, char **argv)
 		sleep(1);
 	}
 	printf("Initiating disconnect from server side\n");
-        close(peer_socket);
-        close(server_socket);
+		close(peer_socket);
+		close(server_socket);
 
-        return 0;
+		return 0;
 }
 
