@@ -5,21 +5,21 @@
 
 
 int first_prime, second_prime, nonce, phi_primes, i, flag;
-long int e[50], d[50], temp[50], j, m[50], en[50];
-char msg[100];
+long int e[500], d[500], temp[500], j, m[500], en[500];
+char msg[1000];
 
-int prime(long int);
-void encryption_key();
-long int cd(long int);
-void encrypt();
-void decrypt();
+int prime(long int, long int*);
+void encryption_key(int, int, int, int*, long int *, long int *, long int *,int*);
+long int cd(long int, int);
+void encrypt(long int *, char *, int, long int *, long int *);
+void decrypt(long int, long int *, long int *, int, long int *);
 
 int main()
 {
 	//Take user input to get first prime
 	printf("\nENTER FIRST PRIME NUMBER\n");
 	scanf("%d", &first_prime);
-	flag = prime(first_prime);
+	flag = prime(first_prime, &j);
 	if(flag == 0)
 	{
 		printf("\nINVALID INPUT\n");
@@ -29,7 +29,7 @@ int main()
 	//Take user input to get second prime
 	printf("\nENTER SECOND PRIME NUMBER\n");
 	scanf("%d", &second_prime);
-	flag = prime(second_prime);
+	flag = prime(second_prime, &j);
 	if(flag == 0 || first_prime == second_prime)
 	{
 		printf("\nINVALID INPUT\n");
@@ -37,10 +37,12 @@ int main()
 	}
 	
 	//Take user input to get message/string to encrypt
+	memset(msg,0, 1000);
 	printf("\nENTER MESSAGE OR STRING TO ENCRYPT\n");
-
-	scanf("%s",msg);
-	for(i = 0; msg[i] != NULL; i++)
+	//fscanf(stdin,"%s",msg);
+	scanf(" %[^\n]", msg);
+	
+	for(i = 0; msg[i] != '\0'; i++)
 	{
 		m[i] = msg[i];
 	}
@@ -48,12 +50,14 @@ int main()
 	
 	nonce = first_prime * second_prime;
 	phi_primes = (first_prime-1) * (second_prime-1);
-	encryption_key();
+	encryption_key(first_prime,second_prime,phi_primes,&flag,e,d,&j,&i);
 	printf("\nPOSSIBLE VALUES OF e AND d ARE\n");
 	for(i = 0; i < j-1; i++)
+	{
 		printf("\n%ld\t%ld", e[i], d[i]);
-	encrypt();
-	decrypt();
+	}
+	encrypt(e,msg,nonce,temp,en);
+	decrypt(j,temp,en,nonce,m);
 	return 0;
 }
 
@@ -61,11 +65,11 @@ int main()
 
 
 
-int prime(long int prime)
+int prime(long int prime, long int *j)
 {
 	int i;
-	j = sqrt(prime);
-	for(i = 2; i <= j; i++)
+	*j = sqrt(prime);
+	for(i = 2; i <= *j; i++)
 	{
 		if(prime % i == 0)
 		{
@@ -80,26 +84,30 @@ int prime(long int prime)
  
 
 //function to generate encryption key
-void encryption_key(int first_prime, int second_prime, int phi_primes, int flag, long int *e, long int *d)
+void encryption_key(int first_prime, int second_prime, int phi_primes, int *flag, long int *e, long int *d, long int * j, int *i)
 {
-	int k,i;
+	int k;
 	k = 0;
-	for(i = 2; i < phi_primes; i++)
+	for(*i = 2; *i < phi_primes; (*i)++)
 	{
-		if(phi_primes % i == 0)
-		 continue;
-		flag = prime(i);
-		if(flag == 1 && i != first_prime && i != second_prime)
+		if(phi_primes % *i == 0)
 		{
-			e[k] = i;
-			flag = cd(e[k]);
-			if(flag > 0)
+			continue;
+		}
+		*flag = prime(*i,j);
+		if(*flag == 1 && *i != first_prime && *i != second_prime)
+		{
+			e[k] = *i;
+			*flag = cd(e[k],phi_primes);
+			if(*flag > 0)
 			{
-				d[k] = flag;
+				d[k] = *flag;
 				k++;
 			}
-	 if(k == 99)
-		break;
+			if(k == 99)
+			{
+				break;
+			}
 		}
 	}
 }
@@ -108,7 +116,7 @@ void encryption_key(int first_prime, int second_prime, int phi_primes, int flag,
 
 
 
-long int cd(long int a)
+long int cd(long int a, int phi_primes)
 {
 	long int k = 1;
 	while(1)
