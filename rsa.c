@@ -56,6 +56,11 @@ int main()
 	decrypt();
 	return 0;
 }
+
+
+
+
+
 int prime(long int prime)
 {
 	int i;
@@ -69,6 +74,10 @@ int prime(long int prime)
 	}
 	return 1;
  }
+ 
+ 
+ 
+ 
 
 //function to generate encryption key
 void encryption_key(int first_prime, int second_prime, int phi_primes, int flag, long int *e, long int *d)
@@ -96,6 +105,9 @@ void encryption_key(int first_prime, int second_prime, int phi_primes, int flag,
 }
 
 
+
+
+
 long int cd(long int a)
 {
 	long int k = 1;
@@ -106,6 +118,10 @@ long int cd(long int a)
 		 return(k / a);
 	}
 }
+
+
+
+
 
 //function to encrypt the message
 void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en)
@@ -133,6 +149,10 @@ void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en)
 	for(i = 0; en[i] != -1; i++)
 		printf("%c", en[i]);
 }
+
+
+
+
 
 //function to decrypt the message
 void decrypt(long int j, long int *temp, long int *en, int nonce, long int *m)
