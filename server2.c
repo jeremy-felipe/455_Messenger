@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 	//first_prime = 104729;
 	//first_prime = 23;
 	//second_prime = 17;
-	first_prime = 13;
+	first_prime = 98897;
 	second_prime = 23;
 	flag = prime(second_prime, &j);
 	nonce = first_prime * second_prime;

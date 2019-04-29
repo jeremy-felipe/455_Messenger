@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 	
 	//RSA
 	//first_prime = 100043;
-	first_prime = 13;
+	first_prime = 100109;
 	second_prime = 23;
 	flag = prime(second_prime, &j);
 	nonce = first_prime * second_prime;
