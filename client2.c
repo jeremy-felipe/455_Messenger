@@ -1,4 +1,4 @@
-#include "./funk.c"
+#include "./funk2.c"
 
 
 	
