@@ -17,7 +17,7 @@
 #include <time.h>
 
 #define SERVER_ADDRESS  "127.0.0.1"
-#define MSG_BUFFER_SIZE 1000
+#define MSG_BUFFER_SIZE 8000
 
 typedef struct 
 {
@@ -111,25 +111,26 @@ void *receive_runnable(void *vargp)
 	rec_struct *real_rec_struct = vargp;
 	while(true)
 	{
-		recv(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0); 
-		for(i = 0; real_rec_struct->ensen[i] != '\0'; i++)
+		recv(real_rec_struct->socket, real_rec_struct->enrec, MSG_BUFFER_SIZE, 0); 
+		for(i = 0; real_rec_struct->enrec[i] != '\0'; i++)
 		{
-			real_rec_struct->m[i] = real_rec_struct->ensen[i];
+			real_rec_struct->m[i] = real_rec_struct->enrec[i];
 		}
-		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
+
+		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->enrec, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
 		for (i = 0; real_rec_struct->m[i] != '\0'; i++)
 		{
 			real_rec_struct->rec[i] = real_rec_struct->m[i];
 		}
 		real_rec_struct->rec[i] = real_rec_struct->m[i];
-		if(strstr(real_rec_struct->rec[i],"/exit") != NULL)
+		if(strstr(real_rec_struct->rec,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
 			break;
 		}
 		//printf("\n<<<%s\n", real_rec_struct->m);
-		memset(real_rec_struct->ensen,0, MSG_BUFFER_SIZE);
+		memset(real_rec_struct->enrec,0, MSG_BUFFER_SIZE);
 	}
 	return NULL; 
 } 
