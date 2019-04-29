@@ -111,21 +111,21 @@ void *receive_runnable(void *vargp)
 	rec_struct *real_rec_struct = vargp;
 	while(true)
 	{
-		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
-		for(i = 0; real_rec_struct->rec[i] != '\0'; i++)
+		recv(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0); 
+		for(i = 0; real_rec_struct->ensen[i] != '\0'; i++)
 		{
-			real_rec_struct->m[i] = real_rec_struct->rec[i];
+			real_rec_struct->m[i] = real_rec_struct->ensen[i];
 		}
 		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
 		
-		if(strstr(real_rec_struct->rec,"/exit") != NULL)
+		if(strstr(real_rec_struct->m,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
 			break;
 		}
-		printf("\n<<<%s\n", real_rec_struct->rec);
-		memset(real_rec_struct->rec,0, MSG_BUFFER_SIZE);
+		//printf("\n<<<%s\n", real_rec_struct->m);
+		memset(real_rec_struct->ensen,0, MSG_BUFFER_SIZE);
 	}
 	return NULL; 
 } 
@@ -135,13 +135,13 @@ void *send_runnable(void *vargp)
 	
 	int i;
 	rec_struct *real_rec_struct = vargp;
-	int p;
 
 	while(true)
 	{	
 		//Prompt for input
-		fgets(real_rec_struct->sen, MSG_BUFFER_SIZE, stdin);
+		//fgets(real_rec_struct->sen, MSG_BUFFER_SIZE, stdin);
 		//scrubber(real_rec_struct->sen);
+		scanf(" %[^\n]", real_rec_struct->sen);
 		for(i = 0; real_rec_struct->sen[i] != '\0'; i++)
 		{
 			real_rec_struct->m[i] = real_rec_struct->sen[i];
@@ -149,8 +149,8 @@ void *send_runnable(void *vargp)
 		//Exit or send
 		if (strstr(real_rec_struct->sen, "/exit") != NULL) 
 		{
-			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp,real_rec_struct->enrec,real_rec_struct->m,&real_rec_struct->j);
-			send(real_rec_struct->socket, real_rec_struct->enrec, 500, 0);
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp, real_rec_struct->ensen,real_rec_struct->m, &real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0);
 			break;
 		}
 		else if(real_rec_struct->cut_off)
@@ -160,22 +160,12 @@ void *send_runnable(void *vargp)
 		}
 		else 
 		{			
-			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp,real_rec_struct->enrec,real_rec_struct->m,&real_rec_struct->j);
-			send(real_rec_struct->socket, real_rec_struct->enrec, MSG_BUFFER_SIZE, 0);
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->m, &real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0);
 			//memset(real_rec_struct->sen,0, MSG_BUFFER_SIZE);
 		}
 
-printf("\nSEN\n");		
-for(p = 0; p < 500; p++)
-{
-	printf("%c",real_rec_struct->sen[p]);
-}
-printf("\n\n\n");
-printf("ENSEN\n");		
-for(p = 0; p < 500; p++)
-{
-	printf("%c",real_rec_struct->ensen[p]);
-}
+
 
 	}
 }
@@ -323,11 +313,10 @@ void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en, lo
 	len = strlen(msg);
 	while(i != len)
 	{
-
 		pt = m[i];
 		pt = pt - 96;
 		k = 1;
-		for(*j = 0; *j < key; *j++)
+		for(*j = 0; *j < key; (*j)++)
 		{
 		 k = k * pt;
 		 k = k % nonce;
@@ -370,6 +359,7 @@ void decrypt(long int j, long int *temp, long int *en, int nonce, long int *m, l
 	printf("\n\nTHE DECRYPTED MESSAGE IS\n");
 	for(i = 0; m[i] != -1; i++)
 	 printf("%c", m[i]);
+	printf("\n");
 	printf("\n");
 }
 

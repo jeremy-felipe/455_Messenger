@@ -60,15 +60,8 @@ int main(int argc, char **argv)
 	encryption_key(first_prime,second_prime,phi_primes,&flag,e,d,&j,&i);
 	
 	
-	int p;
-	for (p = 0; p < 500; p++)
-	{
-		printf("%c",d[p]);
-	}
-	
-	
-	
 	///////////////////////////////////////////////////////////////////
+	
 	if(send(client_socket, d, 500, 0)<0){
 		fprintf(stderr, "Error sending --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
@@ -83,7 +76,7 @@ int main(int argc, char **argv)
 	
 	printf("Server Public Key Received\n");
 	printf("Secure Connection Established\n");
-
+	
 
 
 	char input[MSG_BUFFER_SIZE];
