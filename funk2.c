@@ -338,7 +338,7 @@ void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en, lo
 	 i++;
 	}
 	en[i] = -1;
-	printf("\n\nTHE ENCRYPTED MESSAGE IS\n");
+	printf("\n>>>>>   ");
 	for(i = 0; en[i] != -1; i++)
 		printf("%c", en[i]);
 	printf("\n\n");
@@ -367,7 +367,7 @@ void decrypt(long int j, long int *temp, long int *en, int nonce, long int *m, l
 	 i++;
 	}
 	m[i] = -1;
-	printf("\n\nTHE DECRYPTED MESSAGE IS\n");
+	printf("\n<<<<<   ");
 	for(i = 0; m[i] != -1; i++)
 	 printf("%c", m[i]);
 	printf("\n");
