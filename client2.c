@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 	
 	
 	int first_prime, second_prime, nonce, phi_primes, i, flag;
-	long int server_public_key[500], e[500], d[500], temp[500], j, m[500], enrec[500],ensen[500];
+	long int server_public_key[500], e[500], d[500], rectemp[500], sentemp[500], j, m[500], enrec[500],ensen[500];
 	
 
 	if (argc < 2) {
@@ -89,7 +89,8 @@ int main(int argc, char **argv)
 	args->rec = received;
 	args->socket = client_socket;
 	args->e = e;
-	args->temp = temp;
+	args->rectemp = rectemp;
+	args->sentemp = sentemp;
 	args->enrec = enrec;
 	args->ensen = ensen;
 	args->nonce = nonce;

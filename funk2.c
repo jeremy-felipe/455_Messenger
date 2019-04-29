@@ -31,7 +31,8 @@ typedef struct
 	char *sen;
 	int socket;
 	long int *e;
-	long int *temp;
+	long int *rectemp;
+	long int *sentemp;
 	long int *enrec;
 	long int *ensen;
 	int nonce;
@@ -111,7 +112,7 @@ void *receive_runnable(void *vargp)
 	rec_struct *real_rec_struct = vargp;
 	while(true)
 	{
-		recv(real_rec_struct->socket, real_rec_struct->temp, MSG_BUFFER_SIZE, 0); 
+		recv(real_rec_struct->socket, real_rec_struct->rectemp, MSG_BUFFER_SIZE, 0); 
 		recv(real_rec_struct->socket, real_rec_struct->enrec, MSG_BUFFER_SIZE, 0); 
 		for(i = 0; real_rec_struct->enrec[i] != '\0'; i++)
 		{
@@ -120,7 +121,7 @@ void *receive_runnable(void *vargp)
 
 
 
-		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->enrec, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
+		decrypt(real_rec_struct->j, real_rec_struct->rectemp, real_rec_struct->enrec, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
 		for (i = 0; real_rec_struct->m[i] != '\0'; i++)
 		{
 			real_rec_struct->rec[i] = real_rec_struct->m[i];
@@ -157,8 +158,8 @@ void *send_runnable(void *vargp)
 		//Exit or send
 		if (strstr(real_rec_struct->sen, "/exit") != NULL) 
 		{
-			send(real_rec_struct->socket, real_rec_struct->temp, MSG_BUFFER_SIZE, 0);
-			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp, real_rec_struct->ensen,real_rec_struct->m, &real_rec_struct->j);
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->sentemp, real_rec_struct->ensen,real_rec_struct->m, &real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->sentemp, MSG_BUFFER_SIZE, 0);
 			send(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0);
 			break;
 		}
@@ -169,8 +170,9 @@ void *send_runnable(void *vargp)
 		}
 		else 
 		{			
-			send(real_rec_struct->socket, real_rec_struct->temp, MSG_BUFFER_SIZE, 0);
-			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->m, &real_rec_struct->j);
+			
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->sentemp, real_rec_struct->ensen, real_rec_struct->m, &real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->sentemp, MSG_BUFFER_SIZE, 0);
 			send(real_rec_struct->socket, real_rec_struct->ensen, MSG_BUFFER_SIZE, 0);
 			//memset(real_rec_struct->sen,0, MSG_BUFFER_SIZE);
 		}
