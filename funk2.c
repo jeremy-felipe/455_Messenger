@@ -117,8 +117,12 @@ void *receive_runnable(void *vargp)
 			real_rec_struct->m[i] = real_rec_struct->ensen[i];
 		}
 		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
-		
-		if(strstr(real_rec_struct->m,"/exit") != NULL)
+		for (i = 0; real_rec_struct->m[i] != '\0'; i++)
+		{
+			real_rec_struct->rec[i] = real_rec_struct->m[i];
+		}
+		real_rec_struct->rec[i] = real_rec_struct->m[i];
+		if(strstr(real_rec_struct->rec[i],"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
 			real_rec_struct->cut_off = true;
@@ -286,7 +290,6 @@ void encryption_key(int first_prime, int second_prime, int phi_primes, int *flag
 			}
 		}
 	}
-	printf("%d\n\n",*i);
 }
 
 
@@ -330,7 +333,7 @@ void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en, lo
 	printf("\n\nTHE ENCRYPTED MESSAGE IS\n");
 	for(i = 0; en[i] != -1; i++)
 		printf("%c", en[i]);
-
+	printf("\n\n");
 }
 
 

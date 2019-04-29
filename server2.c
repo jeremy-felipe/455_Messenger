@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	
 
 	
-	if(recv(peer_socket, e, 500, 0)<0){
+	if(recv(peer_socket, client_public_key, sizeof(client_public_key), 0)<0){
 		fprintf(stderr, "error receiving --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 	printf("Client Public Key Received\n");
 	printf("Sending Public Key\n");
 	
-	if(send(peer_socket, d, 500, 0)<0){
+	if(send(peer_socket, d, sizeof(e), 0)<0){
 		fprintf(stderr, "Error sending --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}

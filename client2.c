@@ -62,14 +62,14 @@ int main(int argc, char **argv)
 	
 	///////////////////////////////////////////////////////////////////
 	
-	if(send(client_socket, d, 500, 0)<0){
+	if(send(client_socket, d, sizeof(d), 0)<0){
 		fprintf(stderr, "Error sending --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	
 	printf("Sending Public Key\n");
 	
-	if(recv(client_socket, e, 500, 0)<0){
+	if(recv(client_socket, server_public_key, sizeof(server_public_key), 0)<0){
 		fprintf(stderr, "error recieving --> %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
