@@ -17,7 +17,7 @@
 #include <time.h>
 
 #define SERVER_ADDRESS  "127.0.0.1"
-#define MSG_BUFFER_SIZE 2048
+#define MSG_BUFFER_SIZE 1000
 
 typedef struct 
 {
@@ -30,9 +30,16 @@ typedef struct
 	char *rec;
 	char *sen;
 	int socket;
+	long int *e;
+	long int *temp;
+	long int *enrec;
+	long int *ensen;
+	int nonce;
+	long int j;
+	long int *m;
+	long int *d;
 	int running;
 	int cut_off;
-	int secret;
 } rec_struct;
 
 void *receive_runnable(void *vargp);
@@ -44,6 +51,13 @@ void send_it(char* input, int client_socket, int secret, rec_struct *args);
 void *thread_killer(void *vargp);
 void *send_runnable(void *vargp);
 void set_up_send_receive(rec_struct *args);
+
+int prime(long int, long int*);
+void encryption_key(int, int, int, int*, long int *, long int *, long int *,int*);
+long int cd(long int, int);
+void encrypt(long int *, char *, int, long int *, long int *, long int *, long int *);
+void decrypt(long int, long int *, long int *, int, long int *, long int*);
+void print_encrypt(long int *);
 
 
 
@@ -93,13 +107,17 @@ char* decryption(char mess[], int key){
 
 void *receive_runnable(void *vargp) 
 { 
-	
+	int i;
 	rec_struct *real_rec_struct = vargp;
 	while(true)
 	{
 		recv(real_rec_struct->socket, real_rec_struct->rec, MSG_BUFFER_SIZE, 0); 
+		for(i = 0; real_rec_struct->rec[i] != '\0'; i++)
+		{
+			real_rec_struct->m[i] = real_rec_struct->rec[i];
+		}
+		decrypt(real_rec_struct->j, real_rec_struct->temp, real_rec_struct->ensen, real_rec_struct->nonce, real_rec_struct->m, real_rec_struct->d);
 		
-		decryption(real_rec_struct->rec,real_rec_struct->secret);
 		if(strstr(real_rec_struct->rec,"/exit") != NULL)
 		{
 			real_rec_struct->running = false;
@@ -114,17 +132,25 @@ void *receive_runnable(void *vargp)
 
 void *send_runnable(void *vargp) 
 {
+	
+	int i;
 	rec_struct *real_rec_struct = vargp;
+	int p;
+
 	while(true)
 	{	
 		//Prompt for input
 		fgets(real_rec_struct->sen, MSG_BUFFER_SIZE, stdin);
+		//scrubber(real_rec_struct->sen);
+		for(i = 0; real_rec_struct->sen[i] != '\0'; i++)
+		{
+			real_rec_struct->m[i] = real_rec_struct->sen[i];
+		}
 		//Exit or send
 		if (strstr(real_rec_struct->sen, "/exit") != NULL) 
 		{
-			encryption(real_rec_struct->sen, real_rec_struct->secret);
-			printf("Encrypted Text: %s\n", real_rec_struct->sen);
-			send(real_rec_struct->socket, real_rec_struct->sen, MSG_BUFFER_SIZE, 0);
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp,real_rec_struct->enrec,real_rec_struct->m,&real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->enrec, 500, 0);
 			break;
 		}
 		else if(real_rec_struct->cut_off)
@@ -133,11 +159,9 @@ void *send_runnable(void *vargp)
 			break;
 		}
 		else 
-		{
-			printf(">>>%s \n", real_rec_struct->sen);
-			scrubber(real_rec_struct->sen);
-			encryption(real_rec_struct->sen, real_rec_struct->secret);
-			send(real_rec_struct->socket, real_rec_struct->sen, MSG_BUFFER_SIZE, 0);
+		{			
+			encrypt(real_rec_struct->e, real_rec_struct->sen, real_rec_struct->nonce, real_rec_struct->temp,real_rec_struct->enrec,real_rec_struct->m,&real_rec_struct->j);
+			send(real_rec_struct->socket, real_rec_struct->enrec, MSG_BUFFER_SIZE, 0);
 			memset(real_rec_struct->sen,0, MSG_BUFFER_SIZE);
 		}
 	}
@@ -214,4 +238,134 @@ void set_up_send_receive(rec_struct *args)
 	//Free up the struct
 	free(args);
 	free(thread_args);
+}
+
+int prime(long int prime, long int *j)
+{
+	int i;
+	*j = sqrt(prime);
+	for(i = 2; i <= *j; i++)
+	{
+		if(prime % i == 0)
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+//function to generate encryption key
+void encryption_key(int first_prime, int second_prime, int phi_primes, int *flag, long int *e, long int *d, long int *j, int *i)
+{
+	int k;
+	k = 0;
+	for(*i = 2; *i < phi_primes; (*i)++)
+	{
+
+		if(phi_primes % *i == 0)
+		{
+			continue;
+		}
+		*flag = prime(*i,j);
+		if(*flag == 1 && *i != first_prime && *i != second_prime)
+		{
+			e[k] = *i;
+			*flag = cd(e[k],phi_primes);
+			if(*flag > 0)
+			{
+				d[k] = *flag;
+				k++;
+			}
+			if(k == 99)
+			{
+				break;
+			}
+		}
+	}
+	printf("%d\n\n",*i);
+}
+
+
+long int cd(long int a, int phi_primes)
+{
+	long int k = 1;
+	while(1)
+	{
+		k = k + phi_primes;
+		if(k % a == 0)
+		 return(k / a);
+	}
+}
+
+
+
+
+
+//function to encrypt the message
+void encrypt(long int *e, char *msg, int nonce, long int *temp, long int *en, long int *m, long int *j)
+{
+	long int pt, ct, key = e[0], k, len, i;
+	i = 0;
+	len = strlen(msg);
+	while(i != len)
+	{
+
+		pt = m[i];
+		pt = pt - 96;
+		k = 1;
+		for(*j = 0; *j < key; *j++)
+		{
+		 k = k * pt;
+		 k = k % nonce;
+		}
+	 temp[i] = k;
+	 ct = k + 96;
+	 en[i] = ct;
+	 i++;
+	}
+	en[i] = -1;
+	printf("\n\nTHE ENCRYPTED MESSAGE IS\n");
+	for(i = 0; en[i] != -1; i++)
+		printf("%c", en[i]);
+
+}
+
+
+
+
+
+//function to decrypt the message
+void decrypt(long int j, long int *temp, long int *en, int nonce, long int *m, long int *d)
+{
+	long int pt, ct, key = d[0], k, i;
+	i = 0;
+	while(en[i] != -1)
+	{
+		ct = temp[i];
+		k = 1;
+		for(j = 0; j < key; j++)
+		{
+			k = k * ct;
+			k = k % nonce;
+		}
+	 pt = k + 96;
+	 m[i] = pt;
+	 i++;
+	}
+	m[i] = -1;
+	printf("\n\nTHE DECRYPTED MESSAGE IS\n");
+	for(i = 0; m[i] != -1; i++)
+	 printf("%c", m[i]);
+	printf("\n");
+}
+
+void print_encrypt(long int *en)
+{
+	int i;
+	for (i = 0; en[i] != '\0'; i++)
+	{
+		printf("%c",en[i]);
+	}
+	printf("\n");
 }
