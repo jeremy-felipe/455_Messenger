@@ -123,7 +123,7 @@ void *send_runnable(void *vargp)
 		if (strstr(real_rec_struct->sen, "/exit") != NULL) 
 		{
 			encryption(real_rec_struct->sen, real_rec_struct->secret);
-			printf("Encrypted Text: %s", real_rec_struct->sen);
+			printf("Encrypted Text: %s\n", real_rec_struct->sen);
 			send(real_rec_struct->socket, real_rec_struct->sen, MSG_BUFFER_SIZE, 0);
 			break;
 		}
